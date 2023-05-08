@@ -7,16 +7,24 @@ import earthImage from "../images/earth.png";
 import cardDeckImages from "../images/cards/index";
 
 import "../index.css";
+import ChatInterface from "./ChatInterface";
+const cardsConfig = {
+  C: "Sinek",
+  H: "Kupa",
+  S: "Maça",
+  D: "Karo",
+};
 
 const CardDeck = () => {
   const [cards, setCards] = useState([
-    { group: "fire", image: fireImage, clicked: false },
-    { group: "water", image: waterImage, clicked: false },
-    { group: "air", image: airImage, clicked: false },
-    { group: "earth", image: earthImage, clicked: false },
+    { group: "Fire", image: fireImage, clicked: false },
+    { group: "Water", image: waterImage, clicked: false },
+    { group: "Air", image: airImage, clicked: false },
+    { group: "Earth", image: earthImage, clicked: false },
   ]);
 
-  const [selectedCard, setSelectedCard] = useState([]);
+  const [selectedCards, setselectedCards] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
 
   const cardImages = [
     "C2",
@@ -79,43 +87,68 @@ const CardDeck = () => {
     const randomCardIndex = Math.floor(Math.random() * cardImages.length);
     const randomCard = cardImages[randomCardIndex];
 
+    const isHorizontal = Math.random() < 0.5;
+    const selectedCards = {
+      isHorizontal,
+      image: randomCard,
+      group: cards[index].group,
+    };
+
     const updatedCards = [...cards];
     updatedCards[index] = {
-      group: randomCard,
       image: cardDeckImages[randomCard],
       clicked: true,
     };
     setCards(updatedCards);
-    setSelectedCard((prevSelected) => [...prevSelected, randomCard]);
+    setselectedCards((prevSelected) => [...prevSelected, selectedCards]);
   };
 
   useEffect(() => {
-    if (selectedCard.length === cards.length) {
+    if (selectedCards.length === cards.length) {
       setCards([]);
+      setChatMessages([]);
     }
-  }, [selectedCard, cards.length]);
+  }, [selectedCards, cards.length]);
+
+  const handleChatInput = (message) => {
+    if (message.toLowerCase() === "benim kartlarımı açıkla") {
+      const response = selectedCards.map((card) => {
+        return `${cardsConfig[card.image[0]]} ${card.image} ${card.group} ${
+          card.isHorizontal ? "Horizontal" : "Vertical"
+        } `;
+      });
+      setChatMessages([...chatMessages, ...response]);
+    } else {
+      setChatMessages([...chatMessages, message]);
+    }
+  };
 
   return (
-    <div>
-      <div className="container">
+    <div className="container">
+      <div className="select-card-wrapper">
         {cards.map((card, index) => (
-          <div key={index} onClick={() => handleCardClick(index)}>
+          <div
+            className="card"
+            key={index}
+            onClick={() => handleCardClick(index)}
+          >
             <img src={card.image} alt={card.group} />
           </div>
         ))}
       </div>
       <div className="selected-cards">
-        {selectedCard.map((card, index) => (
+        {selectedCards.map((card, index) => (
           <div
-            className={`selected-card ${
-              Math.random() < 0.5 ? "horizontal" : "vertical"
-            }`}
+            className={`card ${card.isHorizontal ? "horizontal" : "vertical"}`}
             key={index}
           >
-            <img src={cardDeckImages[card]} alt={card} />
+            <img src={cardDeckImages[card.image]} alt={card.image} />
           </div>
         ))}
       </div>
+      {selectedCards.length === 4 && (
+        <ChatInterface messages={chatMessages} onSend={handleChatInput} />
+      )}
     </div>
   );
 };
